@@ -44,8 +44,8 @@ using namespace o2::framework;
 using namespace o2::framework::expressions;
 
 struct jetHadronRecol_OO {
-  
-  //List of configurable parameters
+
+  // List of configurable parameters
   Configurable<std::string> evSel{"evSel", "sel8", "Choose event selection"};
   Configurable<std::string> trkSel{"trkSel", "globalTracks", "Set track selection"};
   Configurable<float> vertexZCut{"vertexZCut", 10., "Accepted z-vertex range"};
@@ -53,20 +53,20 @@ struct jetHadronRecol_OO {
 
   Configurable<float> trkPtMin{"trkPtMin", 0.15, "Minimum pT of acceptanced tracks"};
   Configurable<float> trkPtMax{"trkPtMax", 100., "Maximum pT of acceptanced tracks"};
-  
+
   Configurable<float> trkPhiMin{"trkPhiMin", -7., "Minimum phi angle of acceptanced tracks"};
   Configurable<float> trkPhiMax{"trkPhiMax", 7., "Maximum phi angle of acceptanced tracks"};
 
   Configurable<float> trkEtaCut{"trkPtCut", 0.9, "Eta acceptance of TPC"};
 
-  Configurable<float> pT_TTref_min{"pT_TTref_min", 5.,  "Reference minimum TT pT"};
-  Configurable<float> pT_TTref_max{"pT_TTref_max", 7.,  "Reference maximum TT pT"};
+  Configurable<float> pT_TTref_min{"pT_TTref_min", 5., "Reference minimum TT pT"};
+  Configurable<float> pT_TTref_max{"pT_TTref_max", 7., "Reference maximum TT pT"};
   Configurable<float> pT_TTsig_min{"pT_TTsig_min", 20., "Signal minimum TT pT"};
   Configurable<float> pT_TTsig_max{"pT_TTsig_max", 50., "Signal maximum TT pT"};
 
   Configurable<float> jetR{"jetR", 0.4, "Jet cone radius"};
 
-  //Parameters for MC
+  // Parameters for MC
   Configurable<float> pTHatExponent{"pTHatExponent", 6.0, "exponent of the event weight for the calculation of pTHat"};
   Configurable<float> pTHatMaxMCD{"pTHatMaxMCD", 999.0, "maximum fraction of hard scattering for jet acceptance in detector MC"};
   Configurable<float> pTHatMaxMCP{"pTHatMaxMCP", 999.0, "maximum fraction of hard scattering for jet acceptance in particle MC"};
@@ -76,8 +76,8 @@ struct jetHadronRecol_OO {
   TRandom3* rand = new TRandom3(0);
 
   // Declare filter on collision Z vertex
-  
-  /// \TODO: check whether we have a similar condition for Z vertex cut for MC particle level 
+
+  /// \TODO: check whether we have a similar condition for Z vertex cut for MC particle level
   Filter collisionFilter = nabs(aod::jcollision::posZ) < vertexZCut;
   Filter collisionFilterMC = nabs(aod::jmccollision::posZ) < vertexZCut; // Does it work?
 
@@ -92,84 +92,87 @@ struct jetHadronRecol_OO {
   int eventSelection = -1;
   int trackSelection = -1;
 
-  void init(InitContext const&) {
+  void init(InitContext const&)
+  {
 
     eventSelection = jetderiveddatautilities::initialiseEventSelection(static_cast<std::string>(evSel));
     trackSelection = jetderiveddatautilities::initialiseTrackSelection(static_cast<std::string>(trkSel));
-    
-    //List of raw distributions
+
+    // List of raw distributions
     spectra.add("vertexZ", "z vertex of collisions", kTH1F, {{120, -12., 12.}});
 
-    spectra.add("hTrackPtEtaPhi","Charact. of tracks",  kTH3F, {{100, 0.0, 100.}, {40, -1., 1.}, {40, 0.0, TMath::TwoPi()}});
-    spectra.add("hNtrig","Total number of selected triggers per class", kTH1F, {{2, 0.0, 2.}});
+    spectra.add("hTrackPtEtaPhi", "Charact. of tracks", kTH3F, {{100, 0.0, 100.}, {40, -1., 1.}, {40, 0.0, TMath::TwoPi()}});
+    spectra.add("hNtrig", "Total number of selected triggers per class", kTH1F, {{2, 0.0, 2.}});
     spectra.add("hTTRef_per_event", "Number of TT_{Ref} per event", kTH1F, {{10, 0.0, 10.}});
     spectra.add("hTTSig_per_event", "Number of TT_{Sig} per event", kTH1F, {{5, 0.0, 5.}});
 
     spectra.add("hJetPtEtaPhi_RhoArea", "Charact. of inclusive jets", kTHnSparseF, {{100, 0.0, 100.}, {36, -0.9, 0.9}, {40, 0.0, TMath::TwoPi()}, {60, 0., 30.}});
-    
+
     spectra.add("hDPhi_JetPt_Corr_TTRef", "Events w. TT_{Ref}: #Delta#varphi & #it{p}_{T, jet}", kTH2F, {{52, 0.0, TMath::Pi()}, {120, -20., 100.}});
     spectra.add("hDPhi_JetPt_Corr_TTSig", "Events w. TT_{Sig}: #Delta#varphi & #it{p}_{T, jet}", kTH2F, {{52, 0.0, TMath::Pi()}, {120, -20., 100.}});
     spectra.add("hDPhi_JetPt_TTRef", "Events w. TT_{Ref}: #Delta#varphi & #it{p}_{T, jet}", kTH2F, {{52, 0.0, TMath::Pi()}, {100, 0.0, 100.}});
     spectra.add("hDPhi_JetPt_TTSig", "Events w. TT_{Sig}: #Delta#varphi & #it{p}_{T, jet}", kTH2F, {{52, 0.0, TMath::Pi()}, {100, 0.0, 100.}});
-    
+
     spectra.add("hRecoil_JetPt_Corr_TTRef", "Events w. TT_{Ref}: #it{p}_{T} of recoil jets", kTH1F, {{120, -20.0, 100.}});
     spectra.add("hRecoil_JetPt_Corr_TTSig", "Events w. TT_{Sig}: #it{p}_{T} of recoil jets", kTH1F, {{120, -20.0, 100.}});
     spectra.add("hRecoil_JetPt_TTRef", "Events w. TT_{Ref}: #it{p}_{T} of recoil jets", kTH1F, {{100, 0.0, 100.}});
     spectra.add("hRecoil_JetPt_TTSig", "Events w. TT_{Sig}: #it{p}_{T} of recoil jets", kTH1F, {{100, 0.0, 100.}});
-    
+
     spectra.add("hDPhi_JetPt_RhoArea_TTRef", "Events w. TT_{Ref}: #Delta#varphi & jet pT & rho #times A_{jet}", kTH3F, {{52, 0.0, TMath::Pi()}, {100, 0.0, 100.}, {60, 0.0, 30.}});
     spectra.add("hDPhi_JetPt_RhoArea_TTSig", "Events w. TT_{Sig}: #Delta#varphi & jet pT & rho #times A_{jet}", kTH3F, {{52, 0.0, TMath::Pi()}, {100, 0.0, 100.}, {60, 0.0, 30.}});
-    
-    //List of MC particle level distributions
-    spectra.add("hPartPtEtaPhi","Charact. of particles",  kTH3F, {{100, 0.0, 100.}, {40, -1., 1.}, {40, 0.0, TMath::TwoPi()}});
-    spectra.add("hNtrig_Part","Total number of selected triggers per class", kTH1F, {{2, 0.0, 2.}});
+
+    // List of MC particle level distributions
+    spectra.add("hPartPtEtaPhi", "Charact. of particles", kTH3F, {{100, 0.0, 100.}, {40, -1., 1.}, {40, 0.0, TMath::TwoPi()}});
+    spectra.add("hNtrig_Part", "Total number of selected triggers per class", kTH1F, {{2, 0.0, 2.}});
     spectra.add("hTTRef_per_event_Part", "Number of TT_{Ref} per event", kTH1F, {{10, 0.0, 10.}});
     spectra.add("hTTSig_per_event_Part", "Number of TT_{Sig} per event", kTH1F, {{5, 0.0, 5.}});
 
     spectra.add("hJetPtEtaPhi_RhoArea_Part", "Charact. of inclusive part. level jets", kTHnSparseF, {{100, 0.0, 100.}, {36, -0.9, 0.9}, {40, 0.0, TMath::TwoPi()}, {60, 0., 30.}});
-    
+
     spectra.add("hDPhi_JetPt_Corr_TTRef_Part", "Events w. TT_{Ref}: #Delta#varphi & #it{p}_{T, jet}", kTH2F, {{52, 0.0, TMath::Pi()}, {120, -20., 100.}});
     spectra.add("hDPhi_JetPt_Corr_TTSig_Part", "Events w. TT_{Sig}: #Delta#varphi & #it{p}_{T, jet}", kTH2F, {{52, 0.0, TMath::Pi()}, {120, -20., 100.}});
     spectra.add("hDPhi_JetPt_TTRef_Part", "Events w. TT_{Ref}: #Delta#varphi & #it{p}_{T, jet}", kTH2F, {{52, 0.0, TMath::Pi()}, {100, 0.0, 100.}});
     spectra.add("hDPhi_JetPt_TTSig_Part", "Events w. TT_{Sig}: #Delta#varphi & #it{p}_{T, jet}", kTH2F, {{52, 0.0, TMath::Pi()}, {100, 0.0, 100.}});
-    
+
     spectra.add("hRecoil_JetPt_Corr_TTRef_Part", "Events w. TT_{Ref}: #it{p}_{T} of recoil jets", kTH1F, {{120, -20.0, 100.}});
     spectra.add("hRecoil_JetPt_Corr_TTSig_Part", "Events w. TT_{Sig}: #it{p}_{T} of recoil jets", kTH1F, {{120, -20.0, 100.}});
     spectra.add("hRecoil_JetPt_TTRef_Part", "Events w. TT_{Ref}: #it{p}_{T} of recoil jets", kTH1F, {{100, 0.0, 100.}});
     spectra.add("hRecoil_JetPt_TTSig_Part", "Events w. TT_{Sig}: #it{p}_{T} of recoil jets", kTH1F, {{100, 0.0, 100.}});
-    
+
     spectra.add("hDPhi_JetPt_RhoArea_TTRef_Part", "Events w. TT_{Ref}: #Delta#varphi & jet pT & rho #times A_{jet}", kTH3F, {{52, 0.0, TMath::Pi()}, {100, 0.0, 100.}, {60, 0.0, 30.}});
     spectra.add("hDPhi_JetPt_RhoArea_TTSig_Part", "Events w. TT_{Sig}: #Delta#varphi & jet pT & rho #times A_{jet}", kTH3F, {{52, 0.0, TMath::Pi()}, {100, 0.0, 100.}, {60, 0.0, 30.}});
 
-    //Response matrices, jet pT & jet phi resolution
+    // Response matrices, jet pT & jet phi resolution
     spectra.add("hJetPt_PartLevel_vs_DetLevel", "Correlation jet pT at part. vs. det. levels", kTH2F, {{100, 0.0, 100.}, {100, 0.0, 100.}});
-    
+
     spectra.add("hMissedJets_pT", "Part. level jets w/o matched pair", kTH1F, {{100, 0.0, 100.}});
-    spectra.add("hFakeJets_pT",   "Det. level jets w/o matched pair",  kTH1F, {{100, 0.0, 100.}});
+    spectra.add("hFakeJets_pT", "Det. level jets w/o matched pair", kTH1F, {{100, 0.0, 100.}});
 
     spectra.add("hJetPt_resolution", "Jet p_{T} relative resolution as a func. of jet p_{T, part}", kTH2F, {{90, -1., 2.}, {100, 0.0, 100.}});
-    spectra.add("hJetPhi_resolution", "#varphi resolution as a func. of jet p_{T, part}",  kTH2F, {{100, -1., 1.}, {100, 0.0, 100.}});
+    spectra.add("hJetPhi_resolution", "#varphi resolution as a func. of jet p_{T, part}", kTH2F, {{100, -1., 1.}, {100, 0.0, 100.}});
   }
 
-  //Used to fill histograms with raw and MC det. level data
+  // Used to fill histograms with raw and MC det. level data
   template <typename C, typename J, typename T>
   void fillHistograms(C const& collision, J const& jets, T const& tracks, float weight = 1.)
   {
-    
+
     bool isSig_Ev = false;
     std::vector<double> phi_of_TT_cand;
     double phi_TT = 0.;
     int nTT = 0;
 
     auto dice = rand->Rndm();
-    if (dice < frac_sig) isSig_Ev = true;
+    if (dice < frac_sig)
+      isSig_Ev = true;
 
-    for (auto const& track : tracks) {  
-      if (!jetderiveddatautilities::selectTrack(track, trackSelection)) continue;
+    for (auto const& track : tracks) {
+      if (!jetderiveddatautilities::selectTrack(track, trackSelection))
+        continue;
 
       spectra.fill(HIST("hTrackPtEtaPhi"), track.pt(), track.eta(), track.phi(), weight);
 
-      //Search for TT candidates
+      // Search for TT candidates
       if (isSig_Ev && (track.pt() > pt_TTsig_min && track.pt() < pT_TTsig_max)) {
         phi_of_TT_cand.push_back(track.phi());
         ++nTT;
@@ -185,7 +188,7 @@ struct jetHadronRecol_OO {
 
       int iTrig = rand->Integer(nTT);
       phi_TT = phi_of_TT_cand[iTrig];
-      
+
       if (isSig_Ev) {
         spectra.fill(HIST("hNtrig"), 1.5, weight);
         spectra.fill(HIST("hTTSig_per_event"), nTT, weight);
@@ -203,7 +206,6 @@ struct jetHadronRecol_OO {
         bool isRecoil = (TMath::Pi() - 0.6) < dphi;
 
         if (isSig_Ev) {
-
           spectra.fill(HIST("hDPhi_JetPt_Corr_TTSig"), dphi, jet.pt() - collision.rho() * jet.area(), weight);
           spectra.fill(HIST("hDPhi_JetPt_TTSig"), dphi, jet.pt(), weight);
           spectra.fill(HIST("hDPhi_JetPt_RhoArea_TTSig"), dphi, jet.pt(), collision.rho() * jet.area(), weight);
@@ -217,7 +219,7 @@ struct jetHadronRecol_OO {
           spectra.fill(HIST("hDPhi_JetPt_Corr_TTRef"), dphi, jet.pt() - collision.rho() * jet.area(), weight);
           spectra.fill(HIST("hDPhi_JetPt_TTRef"), dphi, jet.pt(), weight);
           spectra.fill(HIST("hDPhi_JetPt_RhoArea_TTRef"), dphi, jet.pt(), collision.rho() * jet.area(), weight);
-          
+
           if (isRecoil) {
             spectra.fill(HIST("hRecoil_JetPt_Corr_TTRef"), jet.pt() - collision.rho() * jet.area(), weight);
             spectra.fill(HIST("hRecoil_JetPt_TTRef"), jet.pt(), weight);
@@ -236,11 +238,11 @@ struct jetHadronRecol_OO {
   Nima could implement functionality to do that
 
   Right now, code does not work since it does not how to estimate Rho for particle MC
-  
+
   */
   /// \TODO: Wait until Nima will add the code for rho estimation
 
-  template </*typename C, */typename J, typename P>
+  template </*typename C, */ typename J, typename P>
   void fillMCPHistograms(/*C const& collision, */ J const& jets, P const& particles, float weight = 1.)
   {
 
@@ -251,12 +253,14 @@ struct jetHadronRecol_OO {
     float pTHat = 10. / (std::pow(weight, 1.0 / pTHatExponent));
 
     auto dice = rand->Rndm();
-    if (dice < frac_sig) isSig_Ev = true;
+    if (dice < frac_sig)
+      isSig_Ev = true;
 
     for (auto const& particle : particles) {
 
-      //Need charge and primary particles
-      if ((particle.e() == 0.0) || (!particle.isPhysicalPrimary())) continue;
+      // Need charge and primary particles
+      if ((particle.e() == 0.0) || (!particle.isPhysicalPrimary()))
+        continue;
 
       if (isSig_Ev && (particle.pt() > pt_TTsig_min && particle.pt() < pT_TTsig_max)) {
         phi_of_TT_cand.push_back(particle.phi());
@@ -286,18 +290,18 @@ struct jetHadronRecol_OO {
 
     for (auto const& jet : jets) {
 
-      if (jet.pt() > pTHatMaxMCP * pTHat) continue;
+      if (jet.pt() > pTHatMaxMCP * pTHat)
+        continue;
 
       spectra.fill(HIST("hJetPtEtaPhi_RhoArea_Part"), jet.pt(), jet.eta(), jet.phi(), /*collision.rho() */ jet.area(), weight);
-      
+
       if (nTT > 0) {
-      
+
         auto dphi = TMath::Abs(TVector2::Phi_mpi_pi(TVector2::Phi_0_2pi(jet.phi() - phi_TT));
         bool isRecoil = (TMath::Pi() - 0.6) < dphi;
 
         if (isSig_Ev) {
-
-          spectra.fill(HIST("hDPhi_JetPt_Corr_TTSig_Part"), dphi, jet.pt()/* - collision.rho() * jet.area()*/, weight);
+          spectra.fill(HIST("hDPhi_JetPt_Corr_TTSig_Part"), dphi, jet.pt() /* - collision.rho() * jet.area()*/, weight);
           spectra.fill(HIST("hDPhi_JetPt_TTSig_Part"), dphi, jet.pt(), weight);
           spectra.fill(HIST("hDPhi_JetPt_RhoArea_TTSig_Part"), dphi, jet.pt(), /*collision.rho() */ jet.area(), weight);
 
@@ -307,7 +311,6 @@ struct jetHadronRecol_OO {
           }
                     
         } else {
-
           spectra.fill(HIST("hDPhi_JetPt_Corr_TTRef_Part"), dphi, jet.pt() /*- collision.rho() * jet.area()*/, weight);
           spectra.fill(HIST("hDPhi_JetPt_TTRef_Part"), dphi, jet.pt(), weight);
           spectra.fill(HIST("hDPhi_JetPt_RhoArea_TTRef_Part"), dphi, jet.pt(), /*collision.rho() */ jet.area(), weight);
@@ -328,14 +331,16 @@ struct jetHadronRecol_OO {
 
     float pTHat = 10. / (std::pow(weight, 1.0 / pTHatExponent));
 
-    for (auto const& jet_det_level : jets_det_level){
-      if (jet_det_level.pt() > pTHatMaxMCD * pTHat) return;
-      
+    for (auto const& jet_det_level : jets_det_level) {
+      if (jet_det_level.pt() > pTHatMaxMCD * pTHat)
+        return;
+
       if (jet_det_level.has_matchedJetGeo()) {
 
-        const auto jets_matched_part_level = jet_det_level.template matchedJetGeo_as<std::decay_t<PartLevelJets>>(); 
+        const auto jets_matched_part_level = jet_det_level.template matchedJetGeo_as<std::decay_t<PartLevelJets>>();
         for (auto const& jet_matched_part_level : jets_matched_part_level) {
-          if (jet_matched_part_level.pt() > pTHatMaxMCP * pTHat) continue;
+          if (jet_matched_part_level.pt() > pTHatMaxMCP * pTHat)
+            continue;
 
           /*
           Which histos we want:
@@ -348,17 +353,17 @@ struct jetHadronRecol_OO {
 
           spectra.fill(HIST("hJetPt_PartLevel_vs_DetLevel"), jet_det_level.pt(), jet_matched_part_level.pt(), weight);
           spectra.fill(HIST("hJetPt_resolution"), (jet_det_level.pt() - jet_matched_part_level.pt()) / jet_matched_part_level.pt(), jet_matched_part_level.pt(), weight);
-          spectra.fill(HIST("hJetPhi_resolution"), jet_det_level.phi() - jet_matched_part_level.phi(), jet_matched_part_level.pt(), weight);        
+          spectra.fill(HIST("hJetPhi_resolution"), jet_det_level.phi() - jet_matched_part_level.phi(), jet_matched_part_level.pt(), weight);
         }
       } else {
-        spectra.fill(HIST("hFakeJets_pT"), jet_det_level.pt(), weight);        
+        spectra.fill(HIST("hFakeJets_pT"), jet_det_level.pt(), weight);
       }
     }
 
-    //Missed jets
-    for(auto const& jet_part_level: jets_part_level){
+    // Missed jets
+    for (auto const& jet_part_level : jets_part_level) {
       if (!jet_part_level.has_matchedJetGeo()) {
-        spectra.fill(HIST("hMissedJets_pT"), jet_part_level.pt(), weight);        
+        spectra.fill(HIST("hMissedJets_pT"), jet_part_level.pt(), weight);
       }
     }
   }
@@ -370,7 +375,7 @@ struct jetHadronRecol_OO {
   void processData(filtered_Coll const& collision,
                    filtered_Jets const& jets,
                    filtered_Tracks const& tracks)
-  { 
+  {
     if (!jetderiveddatautilities::selectCollision(collision, eventSelection)) {
       return;
     }
@@ -408,12 +413,12 @@ struct jetHadronRecol_OO {
   PROCESS_SWITCH(jetHadronRecol_OO, processMC_DetLevel_Weighted, "process MC detector level with event weight", false);
 
   using filtered_Coll_MC = soa::Filtered<aod::JMcCollisions>::iterator;
-  using filtered_Jets_PartLevel = soa::Filtered<soa::Join<aod::ChargedMCParticleLevelJets, aod::ChargedMCParticleLevelJetConstituents>>;     
-  
+  using filtered_Jets_PartLevel = soa::Filtered<soa::Join<aod::ChargedMCParticleLevelJets, aod::ChargedMCParticleLevelJetConstituents>>;
+
   void processMC_PartLevel(filtered_Coll_MC const& collision,
                            filtered_Jets_PartLevel const& jets,
                            JetParticles const& particles)
-  {     
+  {
     spectra.fill(HIST("vertexZ"), collision.posZ());
     fillMCPHistograms(jets, particles);
   }
@@ -431,13 +436,14 @@ struct jetHadronRecol_OO {
 
   using filtered_MatchedJets_DetLevel = soa::Filtered<soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetsMatchedToChargedMCParticleLevelJets>>;
   using filtered_MatchedJets_PartLevel = soa::Filtered<soa::Join<aod::ChargedMCParticleLevelJets, aod::ChargedMCParticleLevelJetConstituents, aod::ChargedMCParticleLevelJetsMatchedToChargedMCDetectorLevelJets>>;
-  
+
   void processJetsMCPMCDMatched(soa::Filtered<JetCollisionsMCD>::iterator const& collision,
                                 filtered_MatchedJets_DetLevel const& mcdjets,
-                                filtered_MatchedJets_PartLevel const& mcpjets/*,
-                                JetTracks const&,
-                                JetParticles const&,
-                                JetMcCollisions const&*/)
+                                filtered_MatchedJets_PartLevel const& mcpjets /*,
+                                 JetTracks const&,
+                                 JetParticles const&,
+                                 JetMcCollisions const&*/
+  )
   {
     if (!jetderiveddatautilities::selectCollision(collision, eventSelection)) {
       return;
@@ -446,7 +452,6 @@ struct jetHadronRecol_OO {
   }
   PROCESS_SWITCH(jetHadronRecol_OO, processJetsMCPMCDMatched, "process MC matching of inclusive jets (no weight)", false);
 
-  
   void processJetsMCPMCDMatchedWeighted(soa::Filtered<JetCollisionsMCD>::iterator const& collision,
                                         soa::Filtered<soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetsMatchedToChargedMCParticleLevelJets, aod::ChargedMCDetectorLevelJetEventWeights>> const& mcdjets,
                                         JetTracks const&,
@@ -459,7 +464,7 @@ struct jetHadronRecol_OO {
     }
 
     for (const auto& mcdjet : mcdjets) {
-      fillMatchedHistograms(mcdjet, mcdjetsWTA, mcpjetsWTACut, mcpjets, mcdjet.eventWeight()); //Difference between eventWeigh and weight in JMCcollision table?
+      fillMatchedHistograms(mcdjet, mcdjetsWTA, mcpjetsWTACut, mcpjets, mcdjet.eventWeight()); // Difference between eventWeigh and weight in JMCcollision table?
     }
   }
   PROCESS_SWITCH(jetHadronRecol_OO, processJetsMCPMCDMatchedWeighted, "process MC matching of inclusive jets (weighted)", false);
