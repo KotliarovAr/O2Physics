@@ -29,8 +29,8 @@
 #include <Framework/Configurable.h>
 #include <Framework/HistogramSpec.h>
 #include <Framework/InitContext.h>
-#include <Framework/runDataProcessing.h>
 #include <Framework/Logger.h>
+#include <Framework/runDataProcessing.h>
 
 #include "TRandom3.h"
 #include <TH1.h>
@@ -342,7 +342,7 @@ struct RecoilJets {
     std::vector<double> vPhiOfTT;
     double phiTT = 0.;
     int nTT = 0;
-    float pTHat = getPtHat(weight);  
+    float pTHat = getPtHat(weight);
     spectra.fill(HIST("ptHat"), pTHat, weight);
 
     auto dice = rand->Rndm();
